@@ -24,7 +24,9 @@
 .var False           = 0
 .var True            = 1 
 
-.var ActiveCellCharacter  = 42 //$51
+// .var ActiveCellCharacter  = 42 // ASTERISK
+.var ActiveCellCharacter  = 81 // DOT
+// .var ActiveCellCharacter  = 160 // SOLID SQUARE
 .var NeighborCellCharacter  = 86
 
 

@@ -48,8 +48,6 @@
 * = $3800 "Characters"
     // .import binary "sample/characters.bin"
 
-
-
 //===============================================================================
 // $A000-$BFFF  BASIC ROM (8K)
 

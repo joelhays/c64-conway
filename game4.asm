@@ -14,133 +14,115 @@
         bne loopClearWork
 }
 
-gameUpdate:
-    // clear the work area
-    ldx #250
-    lda #0
-    loopClearWork:
-        // load, decrement, and store iterator
-        dex
-        sta WORKAREA,x
-        sta WORKAREA+250,x
-        sta WORKAREA+500,x
-        sta WORKAREA+750,x
-        cpx #0
-        bne loopClearWork
+.macro COUNT_SINGLE_CELL_NEIGHBORS(screenStartAddress, workStartAddress) {
+    lda screenStartAddress,x
+    cmp #ActiveCellCharacter
+    bne doneCountingNeighbor
+    inc workStartAddress-1,x
+    inc workStartAddress+1,x
+    inc workStartAddress-41,x
+    inc workStartAddress-40,x
+    inc workStartAddress-39,x
+    inc workStartAddress+39,x
+    inc workStartAddress+40,x
+    inc workStartAddress+41,x
+    
+    doneCountingNeighbor:
+}
 
+.macro COUNT_NEIGHBORS() {
     // count neighbors
     ldx #250
     loopCountNeighbors:
         dex
-
-        // count neighbors for first 250 screen characters
-        checkSection1:
-            lda SCREENRAM,x
-            cmp #ActiveCellCharacter
-            bne checkSection2
-            inc WORKAREA-1,x
-            inc WORKAREA+1,x
-            inc WORKAREA-41,x
-            inc WORKAREA-40,x
-            inc WORKAREA-39,x
-            inc WORKAREA+39,x
-            inc WORKAREA+40,x
-            inc WORKAREA+41,x
-
-        // count neighbors for second 250 screen characters        
-        checkSection2:
-            lda SCREENRAM+250,x
-            cmp #ActiveCellCharacter
-            bne checkSection3
-            inc WORKAREA+250-1,x
-            inc WORKAREA+250+1,x
-            inc WORKAREA+250-41,x
-            inc WORKAREA+250-40,x
-            inc WORKAREA+250-39,x
-            inc WORKAREA+250+39,x
-            inc WORKAREA+250+40,x
-            inc WORKAREA+250+41,x
-        
-        // count neighbors for third 250 screen characters        
-        checkSection3:
-            lda SCREENRAM+500,x
-            cmp #ActiveCellCharacter
-            bne checkSection4
-            inc WORKAREA+500-1,x
-            inc WORKAREA+500+1,x
-            inc WORKAREA+500-41,x
-            inc WORKAREA+500-40,x
-            inc WORKAREA+500-39,x
-            inc WORKAREA+500+39,x
-            inc WORKAREA+500+40,x
-            inc WORKAREA+500+41,x
-
-        // count neighbors for fourth 250 screen characters                
-        checkSection4:
-            lda SCREENRAM+750,x
-            cmp #ActiveCellCharacter
-            bne repeatCountNeighbors
-            inc WORKAREA+750-1,x
-            inc WORKAREA+750+1,x
-            inc WORKAREA+750-41,x
-            inc WORKAREA+750-40,x
-            inc WORKAREA+750-39,x
-            inc WORKAREA+750+39,x
-            inc WORKAREA+750+40,x
-            inc WORKAREA+750+41,x
+        COUNT_SINGLE_CELL_NEIGHBORS(SCREENRAM, WORKAREA)
+        COUNT_SINGLE_CELL_NEIGHBORS(SCREENRAM+250, WORKAREA+250)
+        COUNT_SINGLE_CELL_NEIGHBORS(SCREENRAM+500, WORKAREA+500)
+        COUNT_SINGLE_CELL_NEIGHBORS(SCREENRAM+750, WORKAREA+750)
 
     repeatCountNeighbors:
         cpx #0
-        beq gameUpdateDone
+        beq countNeighborsDone
         jmp loopCountNeighbors 
+    countNeighborsDone:
+}
 
-    gameUpdateDone:
-        rts
+gameUpdate:
+    CLEAR_WORK()
+    COUNT_NEIGHBORS()
+    rts
+
+
+
+
+.macro RENDER_SINGLE_CELL_NEIGHBOR(screenStartAddress, workStartAddress) {
+    lda workStartAddress,x
+    cmp #0
+    beq renderDone
+    lda screenStartAddress,x
+    cmp #ActiveCellCharacter
+    beq renderDone
+    lda #NeighborCellCharacter
+    sta screenStartAddress,x
+
+    renderDone:
+}
+
+.macro RENDER_SINGLE_CELL(screenStartAddress, workStartAddress) {
+    lda screenStartAddress,x
+    cmp #ActiveCellCharacter
+    beq liveCell
+    
+    deadCell:
+        lda workStartAddress,x
+        cmp #3
+        bne clearCell  
+
+        // if acc == 3, make cell alive
+        lda #ActiveCellCharacter
+        sta screenStartAddress,x
+        jmp done
+    liveCell:
+        lda workStartAddress,x
+        checkMoreThanTwo:
+            cmp #2
+            bpl checkLessThanFour // if a > 2 (acc - 2 > 0)
+            jmp clearCell
+        checkLessThanFour:
+            cmp #4
+            bmi done // if a < 4 (acc - 4 < 0)
+            jmp clearCell
+    clearCell: 
+        lda #SpaceCharacter
+        sta screenStartAddress,x
+        jmp done
+
+    done:
+}
 
 gameRender:
+    // iterate each work cell
+    // if screen char is active jmp processAlive
+    // if screenchar is inactive jmp processDead
+    // processAlive
+    //      if workarea cell < 2: update screenchar = inactive
+    //      if workarea cell > 3: update screenchar = inactive
+    // processDead
+    //      if workarea cell = 3: update screenchar = active
+
     ldx #250
     loopGameRender:
         dex
+        
+        RENDER_SINGLE_CELL(SCREENRAM, WORKAREA)
+        RENDER_SINGLE_CELL(SCREENRAM+250, WORKAREA+250)
+        RENDER_SINGLE_CELL(SCREENRAM+500, WORKAREA+500)
+        RENDER_SINGLE_CELL(SCREENRAM+750, WORKAREA+750)
 
-        renderSection1:
-            lda WORKAREA,x
-            cmp #0
-            beq renderSection2
-            lda SCREENRAM,x
-            cmp #ActiveCellCharacter
-            beq renderSection2
-            lda #NeighborCellCharacter
-            sta SCREENRAM,x
-
-        renderSection2:
-            lda WORKAREA+250,x
-            cmp #0
-            beq renderSection3
-            lda SCREENRAM+250,x
-            cmp #ActiveCellCharacter
-            beq renderSection3
-            lda #NeighborCellCharacter
-            sta SCREENRAM+250,x
-
-        renderSection3:
-            lda WORKAREA+500,x
-            cmp #0
-            beq renderSection4
-            lda SCREENRAM+500,x
-            cmp #ActiveCellCharacter
-            beq renderSection4
-            lda #NeighborCellCharacter
-            sta SCREENRAM+500,x
-
-        renderSection4:
-            lda WORKAREA+750,x
-            cmp #0
-            beq repeatGameRender
-            lda SCREENRAM+750,x
-            cmp #ActiveCellCharacter
-            beq repeatGameRender
-            lda #NeighborCellCharacter
-            sta SCREENRAM+750,x
+        // RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM, WORKAREA)
+        // RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM+250, WORKAREA+250)
+        // RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM+500, WORKAREA+500)
+        // RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM+750, WORKAREA+750)
 
     repeatGameRender:
         cpx #0
