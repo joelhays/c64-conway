@@ -18,12 +18,6 @@ start:
     // Fill 1000 bytes (40x25) of color memory
     LIBSCREEN_SET1000(COLORRAM, LightGreen)
 
-    // ldx #ActiveCellCharacter
-	// stx SCREENRAM+$0057
-	// stx SCREENRAM+$0058
-	// stx SCREENRAM+$007F
-
-
     DRAW_GLIDER()
     // DRAW_SCREEN()
 
