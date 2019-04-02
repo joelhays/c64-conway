@@ -1,10 +1,6 @@
 #import "memory.asm"
 #import "libscreen.asm"
-// #import "game.asm" // kinda......
-// #import "game1.asm" //memory corruption
-// #import "game2.asm" // testing
-// #import "game3.asm" // testing
-#import "game4.asm" // testing
+#import "game.asm"
 
 .pc = $0801 "Basic Upstart"
 :BasicUpstart2(start) 
