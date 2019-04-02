@@ -1,10 +1,10 @@
 #importonce
 
+/// iterate through work memory and clear all values
 .macro CLEAR_WORK() {
     ldx #250
     lda #0
     loopClearWork:
-        // load, decrement, and store iterator
         dex
         sta WORKAREA,x
         sta WORKAREA+250,x
@@ -14,6 +14,7 @@
         bne loopClearWork
 }
 
+/// check all neighbors of the current cell and increment neighbor count if the current cell is active
 .macro COUNT_SINGLE_CELL_NEIGHBORS(screenStartAddress, workStartAddress) {
     lda screenStartAddress,x
     cmp #ActiveCellCharacter
@@ -30,6 +31,7 @@
     doneCountingNeighbor:
 }
 
+/// iterate through screen and count neighbors for all active cells
 .macro COUNT_NEIGHBORS() {
     // count neighbors
     ldx #250
@@ -47,6 +49,7 @@
     countNeighborsDone:
 }
 
+/// simulate automata
 gameUpdate:
     CLEAR_WORK()
     COUNT_NEIGHBORS()
@@ -54,8 +57,8 @@ gameUpdate:
 
 
 
-
-.macro RENDER_SINGLE_CELL_NEIGHBOR(screenStartAddress, workStartAddress) {
+/// debug: render a screen character indicating the neighbor count for a cell
+.macro DEBUG_RENDER_SINGLE_CELL_NEIGHBOR(screenStartAddress, workStartAddress) {
     lda workStartAddress,x
     cmp #0
     beq renderDone
@@ -68,6 +71,7 @@ gameUpdate:
     renderDone:
 }
 
+/// render a screen character indicating the state of the current cell
 .macro RENDER_SINGLE_CELL(screenStartAddress, workStartAddress) {
     lda screenStartAddress,x
     cmp #ActiveCellCharacter
@@ -100,16 +104,17 @@ gameUpdate:
     done:
 }
 
+/// render the state of the work area to the screen
+/// for each cell in work area
+///     if corresponding screen character is active, jmp processAlive
+///     if corresponding screen chracter is inactive, jmp to processDead
+///     processAlive:
+///         if workarea cell < 2: update screenchar = inactive
+///         else if workarea cell > 3: update screenchar = inactive
+///     processDead:
+///         if workarea cell = 3: update screenchar = active
+///         else: update screenchar = inactive
 gameRender:
-    // iterate each work cell
-    // if screen char is active jmp processAlive
-    // if screenchar is inactive jmp processDead
-    // processAlive
-    //      if workarea cell < 2: update screenchar = inactive
-    //      if workarea cell > 3: update screenchar = inactive
-    // processDead
-    //      if workarea cell = 3: update screenchar = active
-
     ldx #250
     loopGameRender:
         dex
@@ -119,10 +124,10 @@ gameRender:
         RENDER_SINGLE_CELL(SCREENRAM+500, WORKAREA+500)
         RENDER_SINGLE_CELL(SCREENRAM+750, WORKAREA+750)
 
-        // RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM, WORKAREA)
-        // RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM+250, WORKAREA+250)
-        // RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM+500, WORKAREA+500)
-        // RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM+750, WORKAREA+750)
+        // DEBUG_RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM, WORKAREA)
+        // DEBUG_RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM+250, WORKAREA+250)
+        // DEBUG_RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM+500, WORKAREA+500)
+        // DEBUG_RENDER_SINGLE_CELL_NEIGHBOR(SCREENRAM+750, WORKAREA+750)
 
     repeatGameRender:
         cpx #0
