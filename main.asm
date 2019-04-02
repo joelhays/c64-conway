@@ -16,7 +16,7 @@ start:
     // Fill 1000 bytes (40x25) of screen memory 
     LIBSCREEN_SET1000(SCREENRAM, SpaceCharacter)
     // Fill 1000 bytes (40x25) of color memory
-    LIBSCREEN_SET1000(COLORRAM, Cyan)
+    LIBSCREEN_SET1000(COLORRAM, LightGreen)
 
     // ldx #ActiveCellCharacter
 	// stx SCREENRAM+$0057
@@ -30,12 +30,10 @@ start:
     jmp mainloop
 
 mainloop:
-    // wait for the raster to reach the bottom of the screen
-    // LIBSCREEN_WAIT_V($ff)
-
-    // inc EXTCOL // start code timer change border color
 
     SLEEP(250)
+
+    // inc EXTCOL // start code timer change border color
 
     jsr gameUpdate
     jsr gameRender
@@ -48,6 +46,7 @@ mainloop:
     ldx #value
     loop:
         dex
+        // wait for the raster to reach the bottom of the screen
         LIBSCREEN_WAIT_V($ff)
         cpx #0
         bne loop
