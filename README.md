@@ -5,6 +5,8 @@ Created with:
 * Kick Assembler (V5.5)
 * VICE Emulator (GTK3VICE-3.3-win32-r35872)
 
-![screenshot][screenshot]
+![screenshot][animated]
+![screenshot][animated2]
 
-[screenshot]: animated.gif
+[animated]: animated.gif
+[animated2]: animated2.gif
