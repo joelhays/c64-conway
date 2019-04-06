@@ -7,4 +7,4 @@ Created with:
 
 ![screenshot][screenshot]
 
-[screenshot]: screenshot.jpg
+[screenshot]: animated.gif
