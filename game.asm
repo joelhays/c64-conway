@@ -135,3 +135,256 @@ gameRender:
         jmp loopGameRender 
     gameRenderDone:
         rts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.var SCREENRAMXLOW = $FB
+.var SCREENRAMXHIGH = $FC
+.var WORKRAMXLOW = $FD
+.var WORKRAMXHIGH = $FE
+.var ROW = $EB
+.var COL = $EC
+
+.macro INCREMENT_NEIGHBOR(startAddress, memoryOffset, columnBounds, rowBounds) {
+    lda COL
+    cmp #columnBounds
+    beq done // skip if at the column boundry
+    lda ROW
+    cmp #rowBounds
+    beq done // skip if at the row boundry
+
+    clc
+    ldy #memoryOffset
+    lda (startAddress),y
+    adc #1
+    sta (startAddress),y
+
+    done:
+}
+
+/// check all neighbors of the current cell and increment neighbor count if the current cell is active
+.macro COUNT_SINGLE_CELL_NEIGHBORS2(screenStartAddress, workStartAddress) {
+
+    checkSelf:
+    ldy #0
+    lda (screenStartAddress),y
+    cmp #ActiveCellCharacter
+    bne checkRight
+
+        incrementRightNeighbor:
+        INCREMENT_NEIGHBOR(workStartAddress, 1, 39, -1)
+        // lda COL
+        // cmp #39
+        // beq incrementBottomLeftNeighbor // skip if at the right edge
+        // clc
+        // ldy #1
+        // lda (workStartAddress),y
+        // adc #1
+        // sta (workStartAddress),y
+
+        incrementBottomLeftNeighbor:    
+        INCREMENT_NEIGHBOR(workStartAddress, 39, 0, 24)
+        // lda COL
+        // cmp #0
+        // beq incrementBottomNeighbor // skip if at the left edge
+        // lda ROW
+        // cmp #24
+        // beq incrementBottomNeighbor // skip if at bottom edge
+        // clc
+        // ldy #39
+        // lda (workStartAddress),y
+        // adc #1
+        // sta (workStartAddress),y
+
+        incrementBottomNeighbor:
+        INCREMENT_NEIGHBOR(workStartAddress, 40, -1, 24)
+        // lda ROW
+        // cmp #24
+        // beq incrementBottomRightNeighbor // skip if at bottom edge
+        // clc
+        // ldy #40
+        // lda (workStartAddress),y
+        // adc #1
+        // sta (workStartAddress),y
+
+        incrementBottomRightNeighbor:
+        INCREMENT_NEIGHBOR(workStartAddress, 41, 39, 24)
+        // lda COL
+        // cmp #39
+        // beq checkRight // skip if at the right edge
+        // lda ROW
+        // cmp #24
+        // beq checkRight // skip if at bottom edge
+        // clc
+        // ldy #41
+        // lda (workStartAddress),y
+        // adc #1
+        // sta (workStartAddress),y
+
+    checkRight:
+    // lda COL
+    // cmp #39
+    // beq checkBottomLeft // skip if at the right edge
+    ldy #1
+    lda (screenStartAddress),y
+    cmp #ActiveCellCharacter
+    bne checkBottomLeft
+    
+    INCREMENT_NEIGHBOR(workStartAddress, 0, 39, -1)
+    // clc
+    // ldy #0
+    // lda (workStartAddress),y
+    // adc #1
+    // sta (workStartAddress),y
+
+    checkBottomLeft:
+    // lda COL
+    // cmp #0
+    // beq checkBottom // skip if at the left edge
+    // lda ROW
+    // cmp #24
+    // beq checkBottom // skip if at the bottom edge
+    ldy #39
+    lda (screenStartAddress),y
+    cmp #ActiveCellCharacter
+    bne checkBottom
+
+    INCREMENT_NEIGHBOR(workStartAddress, 0, 0, 24)
+    // clc
+    // ldy #0
+    // lda (workStartAddress),y
+    // adc #1
+    // sta (workStartAddress),y
+
+    checkBottom:
+    // lda ROW
+    // cmp #24
+    // beq checkBottomRight // skip if at the bottom edge
+    ldy #40
+    lda (screenStartAddress),y
+    cmp #ActiveCellCharacter
+    bne checkBottomRight
+    
+    INCREMENT_NEIGHBOR(workStartAddress, 0, -1, 24)
+    // clc
+    // ldy #0
+    // lda (workStartAddress),y
+    // adc #1
+    // sta (workStartAddress),y
+
+    checkBottomRight:
+    // lda COL
+    // cmp #39
+    // beq doneCountingNeighbor2 // skip if at the right edge
+    // lda ROW
+    // cmp #24
+    // beq doneCountingNeighbor2 // skip if at the bottom edge
+    ldy #41
+    lda (screenStartAddress),y
+    cmp #ActiveCellCharacter
+    bne doneCountingNeighbor2
+    
+    INCREMENT_NEIGHBOR(workStartAddress, 0, 39, 24)
+    // clc
+    // ldy #0
+    // lda (workStartAddress),y
+    // adc #1
+    // sta (workStartAddress),y
+
+    doneCountingNeighbor2:
+}
+
+/// simulate automata
+gameUpdate2:
+    CLEAR_WORK()
+
+
+    lda #$00
+    sta SCREENRAMXLOW
+    lda #$04
+    sta SCREENRAMXHIGH
+
+    lda #$00
+    sta WORKRAMXLOW
+    lda #$20
+    sta WORKRAMXHIGH
+
+    lda #0
+    sta COL
+    sta ROW
+
+
+    loopGameUpdate2:
+        COUNT_SINGLE_CELL_NEIGHBORS2(SCREENRAMXLOW, WORKRAMXLOW)
+
+        jsr moveNext
+
+        lda ROW
+        cmp #25
+        bne loopGameUpdate2Repeat 
+
+        rts
+    loopGameUpdate2Repeat:
+        jmp loopGameUpdate2
+
+moveNext:
+    clc
+    lda SCREENRAMXLOW
+    adc #1
+    sta SCREENRAMXLOW
+    lda SCREENRAMXHIGH
+    adc #0
+    sta SCREENRAMXHIGH
+
+    clc
+    lda WORKRAMXLOW
+    adc #1
+    sta WORKRAMXLOW
+    lda WORKRAMXHIGH
+    adc #0
+    sta WORKRAMXHIGH
+
+    clc
+    lda COL
+    adc #1
+    sta COL
+    cmp #40
+    bne moveNextDone
+
+    lda #0
+    sta COL
+
+    clc
+    lda ROW
+    adc #1
+    sta ROW
+
+    moveNextDone:
+
+    rts

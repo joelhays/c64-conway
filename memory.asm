@@ -1,5 +1,7 @@
 #importonce
 
+// Memory map derived from the book "Retro Game Dev C64 Edition" by Derek Morris
+
 //===============================================================================
 // $00-$FF  PAGE ZERO (256 bytes)
  
@@ -35,7 +37,7 @@
 
 // $0801
 // Game code is placed here by using the *=$0801 directive 
-// in gameMain.asm 
+// in main.asm 
 
 .var WORKAREA = $2000
 
@@ -43,10 +45,10 @@
 // 192 decimal * 64(sprite size) = 12288(hex $3000)
 .var SPRITERAM       = 192
 * = $3000 "Sprites"
-    // .import binary "sprites.spr"
+    // .import binary "sprites.bin"
 
 * = $3800 "Characters"
-    // .import binary "sample/characters.bin"
+    // .import binary "characters.bin"
 
 //===============================================================================
 // $A000-$BFFF  BASIC ROM (8K)

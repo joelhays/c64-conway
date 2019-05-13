@@ -7,25 +7,22 @@
 
 .pc = $0810 "Main program"  
 start:
-    // set screen colors
     LIBSCREEN_SETCOLORS(DarkGray, Black, Black, Black, Black)
-    // Fill 1000 bytes (40x25) of screen memory 
-    LIBSCREEN_SET1000(SCREENRAM, SpaceCharacter)
-    // Fill 1000 bytes (40x25) of color memory
-    LIBSCREEN_SET1000(COLORRAM, LightGreen)
+    LIBSCREEN_FILL(SCREENRAM, SpaceCharacter)
+    LIBSCREEN_FILL(COLORRAM, LightGreen)
 
-    DRAW_GLIDER()
-    // DRAW_SCREEN()
+    DRAW_GLIDER_SCREEN()
+    DRAW_DEMO_SCREEN()
 
     jmp mainloop
 
 mainloop:
 
-    SLEEP(250)
+    SLEEP(125)
 
     // inc EXTCOL // start code timer change border color
 
-    jsr gameUpdate
+    jsr gameUpdate2
     jsr gameRender
 
 	// dec EXTCOL // end code timer reset border color
@@ -37,7 +34,7 @@ mainloop:
     loop:
         dex
         // wait for the raster to reach the bottom of the screen
-        LIBSCREEN_WAIT_V($ff)
+        LIBSCREEN_WAIT_FOR_RASTER($ff)
         cpx #0
         bne loop
 
@@ -45,7 +42,7 @@ mainloop:
 
 
 
-.macro DRAW_GLIDER() {
+.macro DRAW_GLIDER_SCREEN() {
     ldx #ActiveCellCharacter
 	stx SCREENRAM+$020A
 	stx SCREENRAM+$020B
@@ -85,8 +82,11 @@ mainloop:
 	stx SCREENRAM+$0205
 }
 
-.macro DRAW_SCREEN() {
+.macro DRAW_DEMO_SCREEN() {
     ldx #ActiveCellCharacter
+	stx SCREENRAM+1
+	stx SCREENRAM+40
+	stx SCREENRAM+41
 	stx SCREENRAM+$cc
 	stx SCREENRAM+$cc+1
 	stx SCREENRAM+$cc+2
