@@ -12,7 +12,7 @@ start:
     LIBSCREEN_FILL(COLORRAM, LightGreen)
 
     DRAW_GLIDER_SCREEN()
-    DRAW_DEMO_SCREEN()
+    // DRAW_DEMO_SCREEN()
 
     jmp mainloop
 
@@ -22,7 +22,7 @@ mainloop:
 
     // inc EXTCOL // start code timer change border color
 
-    jsr gameUpdate2
+    jsr gameUpdate
     jsr gameRender
 
 	// dec EXTCOL // end code timer reset border color

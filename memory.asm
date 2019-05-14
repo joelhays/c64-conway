@@ -40,6 +40,7 @@
 // in main.asm 
 
 .var WORKAREA = $2000
+* = $2000 "Work Area"
 
 
 // 192 decimal * 64(sprite size) = 12288(hex $3000)
